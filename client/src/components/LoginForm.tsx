@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
+import {useMutation} from '@apollo/client';
 
-import { loginUser } from '../utils/API';
+import { LOGIN_USER } from '../utils/API';
 import Auth from '../utils/auth';
 import type { User } from '../models/User';
 
@@ -12,6 +13,8 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
   const [userFormData, setUserFormData] = useState<User>({ username: '', email: '', password: '', savedBooks: [] });
   const [validated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+
+  const [login]= useMutation(LOGIN_USER);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -26,17 +29,33 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
     if (form.checkValidity() === false) {
       event.preventDefault();
       event.stopPropagation();
+      return;
     }
 
     try {
-      const response = await loginUser(userFormData);
+      console.log("Now logging in...")
+      const {data} = await login({
+        variables: {email: userFormData.email, password: userFormData.password},
+      });
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
+      if (!data) {
+        throw new Error('Uh oh.');
       }
 
-      const { token } = await response.json();
+      const token= data.login.token;
+      localStorage.setItem('id_token', token);
       Auth.login(token);
+      handleModalClose();
+
+      // const response = await loginUser(userFormData);
+
+      // if (!response.ok) {
+      //   throw new Error('something went wrong!');
+      // }
+
+      // const { token } = await response.json();
+      // Auth.login(token);
+      
     } catch (err) {
       console.error(err);
       setShowAlert(true);

@@ -1,64 +1,110 @@
 import { useState, useEffect } from 'react';
 import { Container, Card, Button, Row, Col } from 'react-bootstrap';
 
-import { getMe, deleteBook } from '../utils/API';
-import Auth from '../utils/auth';
+//import { getMe, deleteBook } from '../utils/API';
+//import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
-import type { User } from '../models/User';
+//import type { User } from '../models/User';
+import { GET_PLEASE } from '../utils/queries';
+import { REMOVE_BOOK } from '../utils/mutations';
+
+interface Book {
+  bookId: string;
+  authors: string[];
+  description: string;
+  title: string;
+  image: string;
+  link?: string;
+}
+
+interface UserData {
+  _id: string;
+  username: string;
+  email: string;
+  bookCount: number;
+  savedBooks: Book[];
+}
+
+interface GetMeData {
+  me: UserData;
+}
 
 const SavedBooks = () => {
-  const [userData, setUserData] = useState<User>({
-    username: '',
-    email: '',
-    password: '',
-    savedBooks: [],
-  });
+  const {loading, data} = useQuery<GetMeData>(GET_PLEASE);
+  const [removeBook]= useMutation(REMOVE_BOOK);
+  // const [userData, setUserData] = useState<User>({
+  //   username: '',
+  //   email: '',
+  //   password: '',
+  //   savedBooks: [],
+  // });
+
+  const userData= data?.me || {savedBooks: []};
 
   // use this to determine if `useEffect()` hook needs to run again
-  const userDataLength = Object.keys(userData).length;
+  // const userDataLength = Object.keys(userData).length;
 
-  useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const token = Auth.loggedIn() ? Auth.getToken() : null;
+  // useEffect(() => {
+  //   const getUserData = async () => {
+  //     try {
+  //       const token = Auth.loggedIn() ? Auth.getToken() : null;
 
-        if (!token) {
-          return false;
-        }
+  //       if (!token) {
+  //         return false;
+  //       }
 
-        const response = await getMe(token);
+  //       const response = await getMe(token);
 
-        if (!response.ok) {
-          throw new Error('something went wrong!');
-        }
+  //       if (!response.ok) {
+  //         throw new Error('something went wrong!');
+  //       }
 
-        const user = await response.json();
-        setUserData(user);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  //       const user = await response.json();
+  //       setUserData(user);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
 
-    getUserData();
-  }, [userDataLength]);
+  //   getUserData();
+  // }, [userDataLength]);
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId: string) => {
-    const token = Auth.loggedIn() ? Auth.getToken() : null;
-
-    if (!token) {
-      return false;
-    }
 
     try {
-      const response = await deleteBook(bookId, token);
+      await removeBook({
+        variables: {bookId},
+        update: (cache) => {
+          const {me} = cache.readQuery<GetMeData>({ query: GET_PLEASE}) || {me: {savedBooks: []}};
+          cache.writeQuery({
+            query: GET_PLEASE,
+            data: {
+              me: {
+                ...me,
+                savedBooks: me.savedBooks.filter((book) => book.bookId !== bookId),
+              },
+            },
+          });
+        },
+      });
+    
+    
+    // const token = Auth.loggedIn() ? Auth.getToken() : null;
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
+    // if (!token) {
+    //   return false;
+    // }
 
-      const updatedUser = await response.json();
-      setUserData(updatedUser);
+    // try {
+    //   const response = await deleteBook(bookId, token);
+
+    //   if (!response.ok) {
+    //     throw new Error('something went wrong!');
+    //   }
+
+    //   const updatedUser = await response.json();
+    //   setUserData(updatedUser);
       // upon success, remove book's id from localStorage
       removeBookId(bookId);
     } catch (err) {
@@ -67,9 +113,12 @@ const SavedBooks = () => {
   };
 
   // if data isn't here yet, say so
-  if (!userDataLength) {
-    return <h2>LOADING...</h2>;
-  }
+  // if (!userDataLength) {
+  //   return <h2>LOADING...</h2>;
+  // }
+
+  if (loading) return <h2>Loading Page...</h2>;
+
 
   return (
     <>
