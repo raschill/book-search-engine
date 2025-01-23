@@ -90,13 +90,13 @@ You’ll need to complete the following tasks in each of these back-end files:
 
 * `Schemas` directory:
 
-  * `index.ts`: Export your typeDefs and resolvers.
+  * `index.ts`: Export your types and resolvers.
 
   * `resolvers.ts`: Define the query and mutation functionality to work with the Mongoose models.
 
       **Hint**: Use the functionality in the `user-controller.ts` as a guide.
 
-  * `typeDefs.ts`: Define the necessary `Query` and `Mutation` types:
+  * `types.ts`: Define the necessary `Query` and `Mutation` types:
 
     * `Query` type:
 
@@ -204,7 +204,7 @@ This Challenge is graded based on the following criteria:
 
   * Use an Apollo Server and apply it to the Express.js server as middleware.
 
-  * Include schema settings for resolvers and typeDefs as outlined in the Challenge instructions.
+  * Include schema settings for resolvers and types as outlined in the Challenge instructions.
 
   * Modify the existing authentication middleware to work in the context of a GraphQL API.
 
