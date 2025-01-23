@@ -49,12 +49,12 @@ export const login = async (req: Request, res: Response) => {
 // user comes from `req.user` created in the auth middleware function
 export const saveBook = async (req: Request, res: Response) => {
   try {
-    const updatedUser = await User.findOneAndUpdate(
+    const userUpdate = await User.findOneAndUpdate(
       { _id: req.user._id },
       { $addToSet: { savedBooks: req.body } },
       { new: true, runValidators: true }
     );
-    return res.json(updatedUser);
+    return res.json(userUpdate);
   } catch (err) {
     console.log(err);
     return res.status(400).json(err);
@@ -63,13 +63,13 @@ export const saveBook = async (req: Request, res: Response) => {
 
 // remove a book from `savedBooks`
 export const deleteBook = async (req: Request, res: Response) => {
-  const updatedUser = await User.findOneAndUpdate(
+  const userUpdate = await User.findOneAndUpdate(
     { _id: req.user._id },
     { $pull: { savedBooks: { bookId: req.params.bookId } } },
     { new: true }
   );
-  if (!updatedUser) {
+  if (!userUpdate) {
     return res.status(404).json({ message: "Couldn't find user with this id!" });
   }
-  return res.json(updatedUser);
+  return res.json(userUpdate);
 };
