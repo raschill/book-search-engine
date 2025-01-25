@@ -6,13 +6,13 @@ import { fileURLToPath } from 'url';
 import type {Request, Response} from 'express';
 import {ApolloServer} from '@apollo/server';
 import {expressMiddleware} from '@apollo/server/express4';
-import {types, resolvers} from './scemas/index.js';
+import {typeDefs, resolvers} from './schemas/index.js';
 import { authenticateToken } from './services/auth.js';
 
 const __filename= fileURLToPath(import.meta.url);
 const __dirname= path.dirname(__filename);
 const server= new ApolloServer({
-  types,
+  typeDefs,
   resolvers
 });
 
@@ -27,7 +27,7 @@ const startApolloServer= async () => {
   app.use(express.json());
 
   app.use('/graphql', expressMiddleware(server as any, {
-    constext: authenticateToken as any
+    context: authenticateToken as any
   }));
 
 // if we're in production, serve client/build as static assets
